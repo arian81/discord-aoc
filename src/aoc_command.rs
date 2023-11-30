@@ -1,6 +1,7 @@
 use super::aoc_get;
 use super::format;
-use chrono::Datelike;
+use chrono::{Datelike, Utc};
+// use serenity::builder::CreateEmbed;
 use serenity::model::interactions::application_command::ApplicationCommandInteractionDataOptionValue;
 use serenity::model::prelude::application_command::ApplicationCommandInteraction;
 use std::env;
@@ -25,6 +26,40 @@ pub async fn aoc_command(command: &ApplicationCommandInteraction) -> String {
         },
         None => default_year,
     };
+    // check if year is 2023
+    if year == 2023 {
+        let tz = chrono::FixedOffset::east_opt(3600 * -5).unwrap();
+
+        let current_time = chrono::Utc::now();
+
+        let deadline = chrono::NaiveDate::from_ymd_opt(2023, 12, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap()
+            .and_local_timezone(tz)
+            .unwrap()
+            .with_timezone(&Utc);
+
+        let diff = deadline - current_time;
+
+        let seconds = diff.num_seconds() % 60;
+        let minutes = (diff.num_seconds() / 60) % 60;
+        let hours = (diff.num_seconds() / 60) / 60;
+
+        println!("{:0>2}:{:0>2}:{:0>2}", hours, minutes, seconds);
+
+        if diff.num_seconds() > 0 {
+            //embed code idk how to make it work yet
+            // let mut embed = CreateEmbed::default()
+            //     .title(format!("Advent of Code {} starts in...", year))
+            //     .description(format!("{:0>2}:{:0>2}:{:0>2}", hours, minutes, seconds));
+            // embed
+            return format!(
+                "**\\🎁 \\🎅 \\🌟 Advent of Code {}  \\☃️ \\🎄 \\❄️**\n```Starts in {:0>2} hours {:0>2} minutes {:0>2} seconds.\nGo back and suffer with 3MI3 for now.```",
+                year, hours, minutes, seconds
+            );
+        }
+    }
 
     let session: String = env::var("AOC_SESSION")
         .expect("Expected a session cookie in the environment")
@@ -41,7 +76,7 @@ pub async fn aoc_command(command: &ApplicationCommandInteraction) -> String {
         let members = lb
             .members
             .iter()
-            .filter(|x| x.local_score > 0)
+            // .filter(|x| x.local_score > 0)
             .take(25)
             .collect::<Vec<&aoc_get::Member>>();
 
@@ -93,10 +128,35 @@ pub async fn aoc_command(command: &ApplicationCommandInteraction) -> String {
             .join("\n");
 
         format!(
-            "**\\🎁 \\🎅 \\🌟 Advent of Code Leaderboard {0} \\☃️ \\🎄 \\❄️**\n*https://adventofcode.com/{0}/leaderboard/private/view/{1}*```{2}```*Created with \\❤️ by Koen02*",
+            "**\\🎁 \\🎅 \\🌟 Advent of Code Leaderboard {0} \\☃️ \\🎄 \\❄️**\n*https://adventofcode.com/{0}/leaderboard/private/view/{1}*```{2}```",
             year, lb_id, leaderboard
         )
+        //embed code idk how to make it work yet
+        // let mut embed = CreateEmbed::default()
+        //     .title(format!("Advent of Code Leaderboard {}", year))
+        //     .description(format!(
+        //         "*https://adventofcode.com/{0}/leaderboard/private/view/{1}*",
+        //         year, lb_id
+        //     ));
+        // for (i, member) in members.iter().enumerate() {
+        //     let name = member
+        //         .name
+        //         .as_ref()
+        //         .unwrap_or(&"Anonymous".to_string())
+        //         .to_string();
+        //     embed.field(name, member.local_score.to_string(), false);
+        // }
+        // embed
     } else {
         "Not found".to_string()
+
+        //embed code idk how to make it work yet
+        // let mut embed = CreateEmbed::default()
+        //     .title(format!("Advent of Code Leaderboard {}", year))
+        //     .description(format!(
+        //         "*https://adventofcode.com/{0}/leaderboard/private/view/{1}*",
+        //         year, lb_id
+        //     ));
+        // embed
     }
 }
